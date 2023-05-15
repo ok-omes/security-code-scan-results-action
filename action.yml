@@ -3,11 +3,6 @@ description: 'Security Code Scan action to upload code scanning results'
 branding:
   icon: 'check-circle'
   color: 'purple'
-inputs:
-  sarif_directory:
-    description: The output directory where SARIF files should be collected.
-    required: false
-    default: '..\results'
 runs:
   using: "composite"
   steps:
@@ -18,7 +13,7 @@ runs:
         dotnet tool install --global Sarif.Multitool --version 2.3.10
 
         # Set the output directory
-        $outputDir = $env:INPUT_SARIF_DIRECTORY
+        $outputDir = '..\results'
 
         # Create the output directory
         New-Item -ItemType Directory -Path $outputDir | Out-Null
