@@ -7,7 +7,7 @@ inputs:
   sarif_directory:
     description: The output directory where SARIF files should be collected.
     required: false
-    default: '../results'
+    default: '..\results'
 runs:
   using: "composite"
   steps:
