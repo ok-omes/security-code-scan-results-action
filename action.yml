@@ -12,65 +12,77 @@ runs:
   using: "composite"
   steps:
     - name: Convert sarif
-      shell: bash
+      shell: pwsh
       run: |
+        # Install Sarif.Multitool
         dotnet tool install --global Sarif.Multitool --version 2.3.10
-        outputDir="${{ inputs.sarif_directory }}"
-        mkdir $outputDir
-        
-        cat << EOF > convert.js
+
+        # Set the output directory
+        $outputDir = $env:INPUT_SARIF_DIRECTORY
+
+        # Create the output directory
+        New-Item -ItemType Directory -Path $outputDir | Out-Null
+
+        @'
           const fs = require('fs')
 
           var args = process.argv.slice(2);
           var sarif = JSON.parse(fs.readFileSync(args[0], "utf8"));
 
           for (run of sarif.runs) {
-            run.tool.driver.name = "SecurityCodeScan";
-            run.tool.driver.fullName  = "Vulnerability Patterns Detector for C# and VB.NET";
-            run.tool.driver.informationUri  = "https://security-code-scan.github.io";
+          run.tool.driver.name = "SecurityCodeScan";
+          run.tool.driver.fullName  = "Vulnerability Patterns Detector for C# and VB.NET";
+          run.tool.driver.informationUri  = "https://security-code-scan.github.io";
 
-            run.results = run.results.filter((e => e.ruleId.startsWith("SCS")));
-            run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
+          run.results = run.results.filter((e => e.ruleId.startsWith("SCS")));
+          run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
 
-            for (let i = 0; i < run.results.length; ++i) {
-              run.results[i].ruleIndex = undefined;
-              run.results[i].relatedLocations = undefined;
+          for (let i = 0; i < run.results.length; ++i) {
+            run.results[i].ruleIndex = undefined;
+            run.results[i].relatedLocations = undefined;
 
-              if (run.results[i].locations === undefined) {
-                const match = run.results[i].message.text.match(/(.*) in (.*)\((\d+)\)(:.*)/);
-                run.results[i].message.text = match[1];
-                run.results[i].locations = [{
-                  "physicalLocation" : {
-                    "artifactLocation" : {
-                      "uri" : "file:///" + match[2].replace(/\\\\/g, "/")
-                    },
-                    "region" : {
-                      "startLine": Number(match[3]),
-                      "startColumn": 1,
-                      "endLine": Number(match[3]),
-                      "endColumn": 1
-                    }
-                  }
-                }];
+            if (run.results[i].locations === undefined) {
+            const match = run.results[i].message.text.match(/(.*) in (.*)\((\d+)\)(:.*)/);
+            run.results[i].message.text = match[1];
+            run.results[i].locations = [{
+              "physicalLocation" : {
+              "artifactLocation" : {
+                "uri" : "file:///" + match[2].replace(/\\\\/g, "/")
+              },
+              "region" : {
+                "startLine": Number(match[3]),
+                "startColumn": 1,
+                "endLine": Number(match[3]),
+                "endColumn": 1
               }
+              }
+            }];
             }
+          }
 
-            for (rule of run.tool.driver.rules) {
-              rule.shortDescription = undefined;
-              rule.help = { "text" : rule.helpUri};
-            }
+          for (rule of run.tool.driver.rules) {
+            rule.shortDescription = undefined;
+            rule.help = { "text" : rule.helpUri};
+          }
 
-            run.language = undefined;
+          run.language = undefined;
           }
 
           var converted = JSON.stringify(sarif, null, 2);
           fs.writeFileSync(args[1], converted);
-        EOF
+        '@ | Out-File -FilePath "convert.js" -Encoding UTF8
 
-        i=0
-        for sarifFile in $(find ./ -name '*.sarif')
-        do
-          sarif transform $sarifFile --output $sarifFile -f --sarif-output-version Current
-          node convert.js $sarifFile $sarifFile
-          mv $sarifFile $outputDir/$((i++)).sarif
-        done
+        $i = 0
+        Get-ChildItem -Path .\ -Filter "*.sarif" -Recurse | ForEach-Object {
+            $sarifFile = $_.FullName
+
+            # Transform the Sarif file
+            sarif transform $sarifFile --output $sarifFile -f --sarif-output-version Current
+
+            # Execute convert.js with the Sarif file
+            node convert.js $sarifFile $sarifFile
+
+            # Move the Sarif file to the output directory
+            $newFileName = "$outputDir\$($i++).sarif"
+            Move-Item -Path $sarifFile -Destination $newFileName
+        }
