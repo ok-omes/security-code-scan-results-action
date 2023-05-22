@@ -24,7 +24,7 @@ runs:
         var args = process.argv.slice(2);
         var sarif = JSON.parse(fs.readFileSync(args[0], "utf8"));
 
-        for (let runIndex = 0; runIndex < sarif.runs.length; runIndex++) {
+        for (var runIndex = 0; runIndex < sarif.runs.length; runIndex++) {
           sarif.runs[runIndex].tool.driver.name = "SecurityCodeScan";
           sarif.runs[runIndex].tool.driver.fullName = "Vulnerability Patterns Detector for C# and VB.NET";
           sarif.runs[runIndex].tool.driver.informationUri = "https://security-code-scan.github.io";
@@ -36,7 +36,7 @@ runs:
             return e.id.startsWith("SCS")
           });
 
-          for (let i = 0; i < sarif.runs[runIndex].results.length; ++i) {
+          for (var i = 0; i < sarif.runs[runIndex].results.length; ++i) {
             sarif.runs[runIndex].results[i].ruleIndex = undefined;
             sarif.runs[runIndex].results[i].relatedLocations = undefined;
 
@@ -59,7 +59,7 @@ runs:
             }
           }
 
-          for (let ruleIndex = 0; ruleIndex < sarif.runs[runIndex].tool.driver.rules.length; ruleIndex++) {
+          for (var ruleIndex = 0; ruleIndex < sarif.runs[runIndex].tool.driver.rules.length; ruleIndex++) {
             sarif.runs[runIndex].tool.driver.rules[ruleIndex].shortDescription = undefined;
             sarif.runs[runIndex].tool.driver.rules[ruleIndex].help = { "text": sarif.runs[runIndex].tool.driver.rules[ruleIndex].helpUri };
           }
