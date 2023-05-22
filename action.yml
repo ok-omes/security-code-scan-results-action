@@ -29,13 +29,13 @@ runs:
           sarif.runs[runIndex].tool.driver.fullName = "Vulnerability Patterns Detector for C# and VB.NET";
           sarif.runs[runIndex].tool.driver.informationUri = "https://security-code-scan.github.io";
 
-          if(sarif.runs[runIndex].results) {
+          if (sarif.runs[runIndex].results) {
             sarif.runs[runIndex].results = sarif.runs[runIndex].results.filter(function (e) {
               return e.ruleId.indexOf("SCS") === 0;
             });
           }
-          
-          if(sarif.runs[runIndex].tool.driver.rules) {
+
+          if (sarif.runs[runIndex].tool.driver.rules) {
             sarif.runs[runIndex].tool.driver.rules = sarif.runs[runIndex].tool.driver.rules.filter(function (e) {
               return e.id.indexOf("SCS") === 0;
             });
@@ -64,9 +64,11 @@ runs:
             }
           }
 
-          for (var ruleIndex = 0; ruleIndex < sarif.runs[runIndex].tool.driver.rules.length; ruleIndex++) {
-            sarif.runs[runIndex].tool.driver.rules[ruleIndex].shortDescription = undefined;
-            sarif.runs[runIndex].tool.driver.rules[ruleIndex].help = { "text": sarif.runs[runIndex].tool.driver.rules[ruleIndex].helpUri };
+          if (sarif.runs[runIndex].tool.driver.rules) {
+            for (var ruleIndex = 0; ruleIndex < sarif.runs[runIndex].tool.driver.rules.length; ruleIndex++) {
+              sarif.runs[runIndex].tool.driver.rules[ruleIndex].shortDescription = undefined;
+              sarif.runs[runIndex].tool.driver.rules[ruleIndex].help = { "text": sarif.runs[runIndex].tool.driver.rules[ruleIndex].helpUri };
+            }
           }
 
           sarif.runs[runIndex].language = undefined;
