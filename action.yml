@@ -83,5 +83,5 @@ runs:
 
             # Move the Sarif file to the output directory
             $newFileName = "$outputDir\$($i++).sarif"
-            Move-Item -Path $sarifFile -Destination $newFileName
+            Move-Item -Path $sarifFile -Destination $newFileName -Force
         }
