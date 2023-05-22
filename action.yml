@@ -30,10 +30,10 @@ runs:
           sarif.runs[runIndex].tool.driver.informationUri = "https://security-code-scan.github.io";
 
           sarif.runs[runIndex].results = sarif.runs[runIndex].results.filter(function (e) {
-            return e.ruleId.toString().startsWith("SCS");
+            return e.ruleId.indexOf("SCS") === 0;
           });
           sarif.runs[runIndex].tool.driver.rules = sarif.runs[runIndex].tool.driver.rules.filter(function (e) {
-            return e.id.toString().startsWith("SCS")
+            return e.id.indexOf("SCS") === 0;
           });
 
           for (var i = 0; i < sarif.runs[runIndex].results.length; ++i) {
