@@ -24,22 +24,26 @@ runs:
         var args = process.argv.slice(2);
         var sarif = JSON.parse(fs.readFileSync(args[0], "utf8"));
 
-        sarif.runs.forEach(run => {
-          run.tool.driver.name = "SecurityCodeScan";
-          run.tool.driver.fullName = "Vulnerability Patterns Detector for C# and VB.NET";
-          run.tool.driver.informationUri = "https://security-code-scan.github.io";
+        for (let runIndex = 0; runIndex < sarif.runs.length; runIndex++) {
+          sarif.runs[runIndex].tool.driver.name = "SecurityCodeScan";
+          sarif.runs[runIndex].tool.driver.fullName = "Vulnerability Patterns Detector for C# and VB.NET";
+          sarif.runs[runIndex].tool.driver.informationUri = "https://security-code-scan.github.io";
 
-          run.results = run.results.filter((e => e.ruleId.startsWith("SCS")));
-          run.tool.driver.rules = run.tool.driver.rules.filter((e => e.id.startsWith("SCS")));
+          sarif.runs[runIndex].results = sarif.runs[runIndex].results.filter(function (e) {
+            return e.ruleId.startsWith("SCS");
+          });
+          sarif.runs[runIndex].tool.driver.rules = sarif.runs[runIndex].tool.driver.rules.filter(function (e) {
+            return e.id.startsWith("SCS")
+          });
 
-          for (let i = 0; i < run.results.length; ++i) {
-            run.results[i].ruleIndex = undefined;
-            run.results[i].relatedLocations = undefined;
+          for (let i = 0; i < sarif.runs[runIndex].results.length; ++i) {
+            sarif.runs[runIndex].results[i].ruleIndex = undefined;
+            sarif.runs[runIndex].results[i].relatedLocations = undefined;
 
-            if (run.results[i].locations === undefined) {
-              const match = run.results[i].message.text.match(/(.*) in (.*)\((\d+)\)(:.*)/);
-              run.results[i].message.text = match[1];
-              run.results[i].locations = [{
+            if (sarif.runs[runIndex].results[i].locations === undefined) {
+              const match = sarif.runs[runIndex].results[i].message.text.match(/(.*) in (.*)\((\d+)\)(:.*)/);
+              sarif.runs[runIndex].results[i].message.text = match[1];
+              sarif.runs[runIndex].results[i].locations = [{
                 "physicalLocation": {
                   "artifactLocation": {
                     "uri": "file:///" + match[2].replace(/\\\\/g, "/")
@@ -55,13 +59,13 @@ runs:
             }
           }
 
-          run.tool.driver.rules.forEach(rule => {
-            rule.shortDescription = undefined;
-            rule.help = { "text": rule.helpUri };
-          });
+          for (let ruleIndex = 0; ruleIndex < sarif.runs[runIndex].tool.driver.rules.length; ruleIndex++) {
+            sarif.runs[runIndex].tool.driver.rules[ruleIndex].shortDescription = undefined;
+            sarif.runs[runIndex].tool.driver.rules[ruleIndex].help = { "text": sarif.runs[runIndex].tool.driver.rules[ruleIndex].helpUri };
+          }
 
-          run.language = undefined;
-        });
+          sarif.runs[runIndex].language = undefined;
+        }
 
         var converted = JSON.stringify(sarif, null, 2);
         fs.writeFileSync(args[1], converted);
